@@ -4,7 +4,7 @@ from config.config import Config, DataConfig
 
 if __name__ == "__main__":
 
-    logger = get_logger(__name__)
+    logger = get_logger()
     logger.info("Logger is configured and ready to use.")
 
     data_preprocessor = BoneAgeDataPreprocessing()
