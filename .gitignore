@@ -1,6 +1,9 @@
 /Data
-/.vscode/
+/.vscode
+/model_files
+/logs
+
 .gitignore
 testing.ipynb
-logs/
 __pycache__
+settings.json
