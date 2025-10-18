@@ -1,4 +1,6 @@
 /Data
-.vscode/
+/.vscode/
 .gitignore
 testing.ipynb
+logs/
+__pycache__
