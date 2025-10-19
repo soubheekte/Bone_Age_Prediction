@@ -12,8 +12,6 @@ class Config:
     EPOCHS: int = 50
     LEARNING_RATE: float = 0.001
     BASEDIR: str = r"."
-    MODEL_SAVE_PATH: str = r"models/bone_age_model.h5"
-    LOG_FILE_PATH: str = r"logs/pipeline.log"
 
 @dataclass
 class DataConfig:
@@ -23,3 +21,4 @@ class DataConfig:
     processed_images_dir: str = r"Data/preprocessed_images"
     processed_labels_dir: str = r"Data/preprocessed_labels"
     processed_ids_file: str = r"Data/processed_image_ids.txt"
+    processed_genders_dir: str = r"Data/preprocessed_genders"

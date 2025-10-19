@@ -21,11 +21,14 @@ class BoneAgeDataPreprocessing():
 
         self.processed_images_dir = DataConfig.processed_images_dir
         self.processed_labels_dir = DataConfig.processed_labels_dir
+        # Directory to store gender arrays (male column) as separate files
+        self.processed_genders_dir = DataConfig.processed_genders_dir
         self.processed_ids_file = DataConfig.processed_ids_file
 
         # # Create directories if they don't exist
         os.makedirs(self.processed_images_dir, exist_ok=True)
         os.makedirs(self.processed_labels_dir, exist_ok=True)
+        os.makedirs(self.processed_genders_dir, exist_ok=True)
 
 
 
@@ -93,6 +96,10 @@ class BoneAgeDataPreprocessing():
                     os.remove(os.path.join(self.processed_images_dir, f))
                 for f in os.listdir(self.processed_labels_dir):
                     os.remove(os.path.join(self.processed_labels_dir, f))
+                # Delete gender files if present
+                if os.path.exists(self.processed_genders_dir):
+                    for f in os.listdir(self.processed_genders_dir):
+                        os.remove(os.path.join(self.processed_genders_dir, f))
                 # Empty the processed IDs file
                 if os.path.exists(self.processed_ids_file):
                     open(self.processed_ids_file, 'w').close()
@@ -108,15 +115,19 @@ class BoneAgeDataPreprocessing():
         print(f"Preprocessing {len(batch_label)} images...")
         batch_preprocessed_images = np.array([self.load_and_preprocess_image(path).squeeze(axis=0) for path in batch_label['image_path']])
         batch_bone_ages = batch_label['boneage'].values
+        # Extract male column for the batch and save separately
+        batch_male = batch_label['male'].values
 
         # Generate unique filenames for saving
         batch_id = len(processed_ids) // batch_size + 1
         images_filename = os.path.join(self.processed_images_dir, f'batch_{batch_id}_images.npy')
         labels_filename = os.path.join(self.processed_labels_dir, f'batch_{batch_id}_labels.npy')
 
+        genders_filename = os.path.join(self.processed_genders_dir, f'batch_{batch_id}_genders.npy')
         # Save the preprocessed batch data
         np.save(images_filename, batch_preprocessed_images)
         np.save(labels_filename, batch_bone_ages)
+        np.save(genders_filename, batch_male)
 
         # Update the set of processed IDs
         processed_ids.update(batch_label['id'].astype(str).tolist())
@@ -127,6 +138,7 @@ class BoneAgeDataPreprocessing():
                 f.write(f"{img_id}\n")
 
         print(f"Processed and saved batch {batch_id} with {len(batch_label)} images.")
+        print(f"Saved genders for batch {batch_id} to {self.processed_genders_dir}")
         print(f"Total images processed so far: {len(processed_ids)}")
         print(f"Images remaining to process: {len(unprocessed_label) - len(batch_label)}")
 
