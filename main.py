@@ -16,6 +16,11 @@ parser.add_argument("--train",
                     default="False", 
                     help="Enable training step")
 
+parser.add_argument("--validate",
+                    choices=["True", "False"],
+                    default="False", 
+                    help="Enable validation step")
+
 args = parser.parse_args()
 
 
@@ -24,18 +29,22 @@ if __name__ == "__main__":
     logger = get_logger()
     logger.info("Logger is configured and ready to use.")
 
-    if args.preprocess == "True":
+    if args.preprocess.lower() == "true":
         data_preprocessor = BoneAgeDataPreprocessing()
 
         while (data_preprocessor.process_image_batch(Config.BATCH_SIZE)):
             logger.info(f"Processed a batch of images with batch size {Config.BATCH_SIZE}.")
 
-    if args.train == "True":
+    if args.train.lower() == "true":
         logger.info("Training step is enabled.")
 
         model_trainer = BoneAgeModelTrainer()
         model_trainer.model_Defination()
         model_trainer.train_model()
+
+    if args.validate.lower() == "true":
+        logger.info("Validation step is enabled.")
+        # Add validation code here
 
 
 
