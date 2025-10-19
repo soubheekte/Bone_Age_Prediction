@@ -13,22 +13,39 @@ from config.config import DataConfig
 
 class BoneAgeDataPreprocessing():
 
-    def __init__(self):
-        self.images_dir = DataConfig.image_path
-        self.labels_csv_path = DataConfig.labels_csv_path
-        self.label_data = None
-        self.label_load_preprocess()
+    def __init__(self, validation= False):
 
-        self.processed_images_dir = DataConfig.processed_images_dir
-        self.processed_labels_dir = DataConfig.processed_labels_dir
-        # Directory to store gender arrays (male column) as separate files
-        self.processed_genders_dir = DataConfig.processed_genders_dir
-        self.processed_ids_file = DataConfig.processed_ids_file
+        if validation == False:
+            self.images_dir = DataConfig.train_image_path
+            self.labels_csv_path = DataConfig.labels_csv_path
+            self.label_data = None
+            self.label_load_preprocess()
 
-        # # Create directories if they don't exist
-        os.makedirs(self.processed_images_dir, exist_ok=True)
-        os.makedirs(self.processed_labels_dir, exist_ok=True)
-        os.makedirs(self.processed_genders_dir, exist_ok=True)
+            self.processed_images_dir = DataConfig.train_processed_images_dir
+            self.processed_labels_dir = DataConfig.train_processed_labels_dir
+            self.processed_genders_dir = DataConfig.train_processed_genders_dir
+            self.processed_ids_file = DataConfig.train_processed_ids_file
+
+            # # Create directories if they don't exist
+            os.makedirs(self.processed_images_dir, exist_ok=True)
+            os.makedirs(self.processed_labels_dir, exist_ok=True)
+            os.makedirs(self.processed_genders_dir, exist_ok=True)
+
+        elif validation == True:
+            self.images_dir = DataConfig.valid_image_path
+            self.labels_csv_path = DataConfig.labels_csv_path
+            self.label_data = None
+            self.label_load_preprocess()
+
+            self.processed_images_dir = DataConfig.valid_processed_images_dir
+            self.processed_labels_dir = DataConfig.valid_processed_labels_dir
+            self.processed_genders_dir = DataConfig.valid_processed_genders_dir
+            self.processed_ids_file = DataConfig.valid_processed_ids_file
+
+            # # Create directories if they don't exist
+            os.makedirs(self.processed_images_dir, exist_ok=True)
+            os.makedirs(self.processed_labels_dir, exist_ok=True)
+            os.makedirs(self.processed_genders_dir, exist_ok=True)
 
 
 

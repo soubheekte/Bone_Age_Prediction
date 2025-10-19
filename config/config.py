@@ -15,10 +15,16 @@ class Config:
 
 @dataclass
 class DataConfig:
-    image_path: str = r"Data/small_data"
+    train_image_path: str = r"Data/train_source_data"
+    valid_image_path: str = r"Data/valid_source_data"
     labels_csv_path: str = r"Data/boneage-dataset-labels.csv"
 
-    processed_images_dir: str = r"Data/preprocessed_images"
-    processed_labels_dir: str = r"Data/preprocessed_labels"
-    processed_ids_file: str = r"Data/processed_image_ids.txt"
-    processed_genders_dir: str = r"Data/preprocessed_genders"
+    train_processed_images_dir: str = r"Data/train_preprocessed_images"
+    train_processed_labels_dir: str = r"Data/train_preprocessed_labels"
+    train_processed_ids_file: str = r"Data/train_processed_image_ids.txt"
+    train_processed_genders_dir: str = r"Data/train_preprocessed_genders"
+
+    valid_processed_images_dir: str = r"Data/valid_preprocessed_images"
+    valid_processed_labels_dir: str = r"Data/valid_preprocessed_labels"
+    valid_processed_ids_file: str = r"Data/valid_processed_image_ids.txt"
+    valid_processed_genders_dir: str = r"Data/valid_preprocessed_genders"

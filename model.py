@@ -56,8 +56,8 @@ class BoneAgeModelTrainer():
 
     def __init__(self):
 
-        self.image_batch_files = sorted([os.path.join(DataConfig.processed_images_dir, f) for f in os.listdir(DataConfig.processed_images_dir) if f.endswith('.npy')])
-        self.label_batch_files = sorted([os.path.join(DataConfig.processed_labels_dir, f) for f in os.listdir(DataConfig.processed_labels_dir) if f.endswith('.npy')])
+        self.image_batch_files = sorted([os.path.join(DataConfig.train_processed_images_dir, f) for f in os.listdir(DataConfig.train_processed_images_dir) if f.endswith('.npy')])
+        self.label_batch_files = sorted([os.path.join(DataConfig.train_processed_labels_dir, f) for f in os.listdir(DataConfig.train_processed_labels_dir) if f.endswith('.npy')])
 
 
     def model_Defination(self):
@@ -84,7 +84,7 @@ class BoneAgeModelTrainer():
 
     def train_model(self):
 
-        split_ratio = 0.8 # 80% for training
+        split_ratio = 1 - Config.TEST_SIZE      # % for training
         split_index = int(len(self.image_batch_files) * split_ratio)
 
 
