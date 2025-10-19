@@ -1,4 +1,5 @@
-from preprocessing_images import *
+from model import BoneAgeModelTrainer
+from preprocessing_images import BoneAgeDataPreprocessing
 from utils.logger import get_logger
 from config.config import Config, DataConfig
 import argparse
@@ -31,9 +32,10 @@ if __name__ == "__main__":
 
     if args.train == "True":
         logger.info("Training step is enabled.")
-        # Add training code here
 
-
+        model_trainer = BoneAgeModelTrainer()
+        model_trainer.model_Defination()
+        model_trainer.train_model()
 
 
 

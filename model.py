@@ -8,13 +8,6 @@ from config.config import DataConfig, Config
 # from tensorflow.keras.models import Model
 
 
-
-class BoneAgeModel:
-
-    def __init__(self):
-        self
-
-
 class BoneAgeDataGenerator(tf.keras.utils.Sequence):
     """
     Custom Keras Sequence to load preprocessed image and label batches from .npy files.
@@ -59,91 +52,106 @@ class BoneAgeDataGenerator(tf.keras.utils.Sequence):
 
 
 
-if __name__ == "__main__":
-    
-    # Define paths where processed data is saved
-    processed_images_dir = DataConfig.processed_images_dir
-    processed_labels_dir = DataConfig.processed_labels_dir
+class BoneAgeModelTrainer():
 
-    image_batch_files = sorted([os.path.join(processed_images_dir, f) for f in os.listdir(processed_images_dir) if f.endswith('.npy')])
-    label_batch_files = sorted([os.path.join(processed_labels_dir, f) for f in os.listdir(processed_labels_dir) if f.endswith('.npy')])
+    def __init__(self):
+
+        self.image_batch_files = sorted([os.path.join(DataConfig.processed_images_dir, f) for f in os.listdir(DataConfig.processed_images_dir) if f.endswith('.npy')])
+        self.label_batch_files = sorted([os.path.join(DataConfig.processed_labels_dir, f) for f in os.listdir(DataConfig.processed_labels_dir) if f.endswith('.npy')])
 
 
-    split_ratio = 0.8 # 80% for training
-    split_index = int(len(image_batch_files) * split_ratio)
+    def model_Defination(self):
 
-
-    train_image_files = image_batch_files[:split_index]
-    train_label_files = label_batch_files[:split_index]
-
-    val_image_files = image_batch_files[split_index:]
-    val_label_files = label_batch_files[split_index:]
-
-
-    print(f"Number of training batch files: {len(train_image_files)}")
-    print(f"Number of validation batch files: {len(val_image_files)}")
-
-
-    train_generator = BoneAgeDataGenerator(train_image_files, train_label_files, batch_size=1)
-    val_generator = BoneAgeDataGenerator(val_image_files, val_label_files, batch_size=1)
-
-
-    # Define a simplified AlexNet-like model
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(96, (11, 11), strides=(4, 4), activation='relu', input_shape=(224, 224, 1)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-        tf.keras.layers.Conv2D(256, (5, 5), padding='same', activation='relu'),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-        tf.keras.layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
-        tf.keras.layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
-        tf.keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu'),
-        tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(4096, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(4096, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(1, activation='linear') # Output layer for regression
+        # Define a simplified AlexNet-like model
+        self.model = tf.keras.models.Sequential([
+            tf.keras.layers.Conv2D(96, (11, 11), strides=(4, 4), activation='relu', input_shape=(224, 224, 1)),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+            tf.keras.layers.Conv2D(256, (5, 5), padding='same', activation='relu'),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+            tf.keras.layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
+            tf.keras.layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
+            tf.keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu'),
+            tf.keras.layers.MaxPooling2D((3, 3), strides=(2, 2)),
+            tf.keras.layers.Flatten(),
+            tf.keras.layers.Dense(4096, activation='relu'),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(4096, activation='relu'),
+            tf.keras.layers.Dropout(0.5),
+            tf.keras.layers.Dense(1, activation='linear') # Output layer for regression
     ])
 
-    # Using Adam optimizer and Mean Absolute Error as the loss function
-    model.compile(optimizer='adam', loss='mae', metrics=['mae'])
+    def train_model(self):
+
+        split_ratio = 0.8 # 80% for training
+        split_index = int(len(self.image_batch_files) * split_ratio)
 
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_mae', patience=5, restore_best_weights=True)
+        train_image_files = self.image_batch_files[:split_index]
+        train_label_files = self.label_batch_files[:split_index]
 
-    # Train the model
-    # We will use the data generators created earlier
-    history = model.fit(
-        train_generator,
-        epochs=3, # You can adjust the number of epochs
-        validation_data=val_generator,
-        callbacks=[early_stopping] # Add the early stopping callback here
-    )
+        val_image_files = self.image_batch_files[split_index:]
+        val_label_files = self.label_batch_files[split_index:]
 
 
-    # Define the base directory in Google Drive
-    base_drive_dir = Config.BASEDIR
-    model_save_dir = os.path.join(base_drive_dir, 'model_files')
+        train_generator = BoneAgeDataGenerator(train_image_files, train_label_files, batch_size=1)
+        val_generator = BoneAgeDataGenerator(val_image_files, val_label_files, batch_size=1)
+        
 
-    # Create the directory if it doesn't exist
-    os.makedirs(model_save_dir, exist_ok=True)
+        print(f"Number of training batch files: {len(train_image_files)}")
+        print(f"Number of validation batch files: {len(val_image_files)}")
 
-    # Define a versioning scheme for the model filename
-    # You could use a timestamp or a simple counter
-    version = 1 # Starting version
-    model_filename = f'alexnet_bone_age_model_v{version}.h5'
-    model_save_path = os.path.join(model_save_dir, model_filename)
 
-    # Check if the file already exists and increment the version if needed
-    while os.path.exists(model_save_path):
-        version += 1
-        model_filename = f'alexnet_bone_age_model_v{version}.h5'
+        # Using Adam optimizer and Mean Absolute Error as the loss function
+        self.model.compile(optimizer='adam', loss='mae', metrics=['mae'])
+
+
+        early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_mae', patience=5, restore_best_weights=True)
+
+        # Train the model
+        # We will use the data generators created earlier
+        history = self.model.fit(
+            train_generator,
+            epochs=3, # You can adjust the number of epochs
+            validation_data=val_generator,
+            callbacks=[early_stopping] # Add the early stopping callback here
+        )
+
+
+        # Define the base directory
+        model_save_dir = os.path.join(Config.BASEDIR, 'model_files')
+
+        # Create the directory if it doesn't exist
+        os.makedirs(model_save_dir, exist_ok=True)
+
+        # Define a versioning scheme for the model filename
+        # You could use a timestamp or a simple counter
+        version = 1 # Starting version
+        model_filename = f'alexnet_bone_age_model_v{version}.keras'
         model_save_path = os.path.join(model_save_dir, model_filename)
 
+        # Check if the file already exists and increment the version if needed
+        while os.path.exists(model_save_path):
+            version += 1
+            model_filename = f'alexnet_bone_age_model_v{version}.keras'
+            model_save_path = os.path.join(model_save_dir, model_filename)
 
-    # Save the trained model
-    model.save(model_save_path)
-    print(f"Model saved successfully to: {model_save_path}")
+        # Save the trained model
+        self.model.save(model_save_path)
+        print(f"Model saved successfully to: {model_save_path}")
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
