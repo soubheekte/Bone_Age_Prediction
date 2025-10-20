@@ -3,6 +3,8 @@ import os
 # from tensorflow.keras.utils import Sequence
 import tensorflow as tf
 from config.config import DataConfig, Config
+from utils.logger import get_logger
+from utils.common_utils import compute_regression_metrics, save_model_with_rotation
 # from tensorflow.keras.applications import InceptionV3
 # from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 # from tensorflow.keras.models import Model
@@ -80,7 +82,8 @@ class BoneAgeModelTrainer():
             tf.keras.layers.Dense(4096, activation='relu'),
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(1, activation='linear') # Output layer for regression
-    ])
+        ])
+  
 
     def train_model(self):
 
@@ -119,28 +122,9 @@ class BoneAgeModelTrainer():
         )
 
 
-        # Define the base directory
-        model_save_dir = os.path.join(Config.BASEDIR, 'model_files')
+        # use the new save helper which enforces max model files
+        save_model_with_rotation(base_name='alexnet_bone_age_model')
 
-        # Create the directory if it doesn't exist
-        os.makedirs(model_save_dir, exist_ok=True)
-
-        # Define a versioning scheme for the model filename
-        # You could use a timestamp or a simple counter
-        version = 1 # Starting version
-        model_filename = f'alexnet_bone_age_model_v{version}.keras'
-        model_save_path = os.path.join(model_save_dir, model_filename)
-
-        # Check if the file already exists and increment the version if needed
-        while os.path.exists(model_save_path):
-            version += 1
-            model_filename = f'alexnet_bone_age_model_v{version}.keras'
-            model_save_path = os.path.join(model_save_dir, model_filename)
-
-        # Save the trained model
-        self.model.save(model_save_path)
-        print(f"Model saved successfully to: {model_save_path}")
-    
 
 
 

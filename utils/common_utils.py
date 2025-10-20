@@ -1,4 +1,6 @@
 import numpy as np
+from config.config import Config
+import os
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 def _to_numpy(x):
@@ -68,3 +70,41 @@ def compute_regression_metrics(y_true, y_pred, sample_weight=None, epsilon=1e-8)
 		"mape": mape
 	}
 
+
+def save_model_with_rotation(model, base_name='alexnet_bone_age_model', max_models=5):
+	"""
+	Saves the current model using a versioned filename and ensures
+	only `max_models` files with the given base_name remain in model_files dir.
+	"""
+	model_save_dir = os.path.join(Config.BASEDIR, 'model_files')
+	os.makedirs(model_save_dir, exist_ok=True)
+
+	# find existing files matching base_name and allowed extensions
+	allowed_exts = ('.keras', '.h5', 'joblib')
+	existing = [os.path.join(model_save_dir, f) for f in os.listdir(model_save_dir)
+				if f.startswith(base_name) and f.endswith(allowed_exts)]
+	existing_sorted = sorted(existing, key=os.path.getmtime)  # oldest first
+
+	# if there are already >= max_models, delete oldest so that after saving we'll have <= max_models
+	if len(existing_sorted) >= max_models:
+		num_to_delete = len(existing_sorted) - (max_models - 1)
+		for i in range(num_to_delete):
+			try:
+				os.remove(existing_sorted[i])
+			except Exception:
+				# best-effort removal; ignore failures
+				pass
+
+	# create a unique versioned filename
+	version = 1
+	model_filename = f'{base_name}_v{version}.keras'
+	model_save_path = os.path.join(model_save_dir, model_filename)
+	while os.path.exists(model_save_path):
+		version += 1
+		model_filename = f'{base_name}_v{version}.keras'
+		model_save_path = os.path.join(model_save_dir, model_filename)
+
+	# save and return path
+	model.save(model_save_path)
+	print(f"Model saved successfully to: {model_save_path}")
+	return model_save_path
