@@ -3,24 +3,22 @@ from config.config import DataConfig, Config
 import tensorflow as tf
 import numpy as np
 from model import BoneAgeDataGenerator
+from utils.common_utils import compute_regression_metrics
+from utils.logger import get_logger
 
 class ValidationModel():
 
     def __init__(self):
-        pass
+        self.image_batch_files = sorted([os.path.join(DataConfig.valid_processed_images_dir, f) for f in os.listdir(DataConfig.valid_processed_images_dir) if f.endswith('.npy')])
+        self.label_batch_files = sorted([os.path.join(DataConfig.valid_processed_labels_dir, f) for f in os.listdir(DataConfig.valid_processed_labels_dir) if f.endswith('.npy')])
+        # initialize custom logger
+        self.logger = get_logger(__name__)
 
-
+    # Replace your existing validate_model function with this one
 
     def validate_model(self):
         """
         Validates the given model on the provided validation data.
-
-        Args:
-            model: The trained model to be validated.
-            validation_data: A tuple (X_val, y_val) containing validation features and labels.
-
-        Returns:
-            float: The validation accuracy of the model.
         """
         model_save_dir = os.path.join(Config.BASEDIR, 'model_files')
 
@@ -46,33 +44,23 @@ class ValidationModel():
                 loaded_model = tf.keras.models.load_model(latest_model_path, custom_objects={'mae': tf.keras.metrics.MeanAbsoluteError()})
             else:
                 loaded_model = tf.keras.models.load_model(model_save_dir, custom_objects={'mae': tf.keras.metrics.MeanAbsoluteError()})
+            self.logger.info("Loaded model from %s", latest_model_path or model_save_dir)
         except Exception as e:
+            # log the exception and re-raise for visibility
+            self.logger.exception("Failed to load model from '%s': %s", latest_model_path or model_save_dir, e)
             raise RuntimeError(f"Failed to load model from '{latest_model_path or model_save_dir}': {e}") from e
         
-
-        # Preprocess validation data
-        
-
-        # Predict on the validation data
-        val_generator = BoneAgeDataGenerator(DataConfig.valid_processed_images_dir, DataConfig.valid_processed_labels_dir, batch_size=1)
+        # Predict on the validation data using the generator
+        val_generator = BoneAgeDataGenerator(self.image_batch_files, self.label_batch_files, batch_size=Config.BATCH_SIZE)
         predictions = loaded_model.predict(val_generator)
 
-        # Prepare list of validation label files for sample printing
-        val_label_files = []
-        if os.path.isdir(DataConfig.valid_processed_labels_dir):
-            try:
-                val_label_files = sorted([
-                    os.path.join(DataConfig.valid_processed_labels_dir, f)
-                    for f in os.listdir(DataConfig.valid_processed_labels_dir)
-                    if f.endswith('.npy')
-                ])
-            except Exception:
-                val_label_files = []
+        labels_flat = np.concatenate([np.load(f).ravel() for f in self.label_batch_files])
+        labels_flat = labels_flat.astype(int)
 
-        # Display the first few predictions and actual values
-        print("Sample Predictions vs Actuals:")
-        for i in range(min(10, len(val_label_files))):  # Display up to 10 samples
-            actual_labels = np.load(val_label_files[i])
-            print(f"Batch {i+1}:")
-            for j in range(min(5, len(actual_labels))):  # Display up to 5 items per batch
-                print(f"  Actual: {actual_labels[j][0]:.2f}, Predicted: {predictions[i * val_generator.batch_size + j][0]:.2f}")
+
+        # Compute regression metrics
+        metrics = compute_regression_metrics(labels_flat, predictions.ravel())
+
+        # log the metrics using the custom logger
+        for metric_name, metric_value in metrics.items():
+            self.logger.info("%s: %.4f", metric_name, metric_value)

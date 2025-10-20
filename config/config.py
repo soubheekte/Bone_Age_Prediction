@@ -9,7 +9,7 @@ class Config:
     TEST_SIZE: float = 0.2
     IMAGE_SIZE: tuple = (256, 256)
     BATCH_SIZE: int = 2
-    EPOCHS: int = 50
+    EPOCHS: int = 2
     LEARNING_RATE: float = 0.001
     BASEDIR: str = r"."
 

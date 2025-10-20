@@ -113,7 +113,7 @@ class BoneAgeModelTrainer():
         # We will use the data generators created earlier
         history = self.model.fit(
             train_generator,
-            epochs=3, # You can adjust the number of epochs
+            epochs=Config.EPOCHS, # You can adjust the number of epochs
             validation_data=val_generator,
             callbacks=[early_stopping] # Add the early stopping callback here
         )

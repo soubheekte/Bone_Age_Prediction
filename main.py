@@ -19,7 +19,7 @@ parser.add_argument("--train",
 
 parser.add_argument("--validate",
                     choices=["True", "False"],
-                    default="False", 
+                    default="True", 
                     help="Enable validation step")
 
 
