@@ -2,6 +2,9 @@ import numpy as np
 import os
 # from tensorflow.keras.utils import Sequence
 import tensorflow as tf
+# Enable mixed precision
+policy = tf.keras.mixed_precision.Policy('mixed_float16')
+tf.keras.mixed_precision.set_global_policy(policy)
 from config.config import DataConfig, Config
 from utils.logger import get_logger
 from utils.common_utils import compute_regression_metrics, save_model_with_rotation
