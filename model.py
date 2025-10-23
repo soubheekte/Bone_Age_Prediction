@@ -65,6 +65,12 @@ class BoneAgeModelTrainer():
         self.label_batch_files = sorted([os.path.join(DataConfig.train_processed_labels_dir, f) for f in os.listdir(DataConfig.train_processed_labels_dir) if f.endswith('.npy')])
 
 
+        # create a logger for the trainer
+        self.logger = get_logger(__name__)
+        self.logger.info("BoneAgeModelTrainer initialized.")
+        self.logger.info("Found %d image batch files, %d gender files, %d label files",
+                         len(self.image_batch_files), len(self.male_data_files), len(self.label_batch_files))
+
 
     def model_definition(self):
         # 1. Define the input layers for each data source
@@ -102,10 +108,13 @@ class BoneAgeModelTrainer():
         # 6. Define the final model with two inputs and one output
         self.model = tf.keras.models.Model(inputs=[image_input, male_input], outputs=final_output)
 
-        # You can print the summary to verify the architecture
-        self.model.summary()
 
-
+        self.logger.info("Model architecture defined. Summary follows:")
+        try:
+            # You can print the summary to verify the architecture
+            self.model.summary()
+        except Exception as e:
+            self.logger.error("Error occurred while printing model summary: %s", e)
 
     def train_model(self):
 
@@ -145,20 +154,82 @@ class BoneAgeModelTrainer():
             restore_best_weights=True
         )
 
+        # instantiate training progress logger callback
+        training_logger_cb = TrainingLoggerCallback(self.logger, batch_log_freq=50)
+
         # Train the model
         # We will use the data generators created earlier
-        history = self.model.fit(
-            train_generator,
-            epochs=Config.EPOCHS, # You can adjust the number of epochs
-            validation_data=val_generator,
-            callbacks=[early_stopping_callback] # Add the early stopping callback here
-        )
-
+        try:
+            history = self.model.fit(
+                train_generator,
+                epochs=Config.EPOCHS, # You can adjust the number of epochs
+                validation_data=val_generator,
+                callbacks=[early_stopping_callback, training_logger_cb] # Add training logger callback here
+            )
+        except Exception as e:
+            self.logger.error("Error occurred during model training: %s", e)
 
         # use the new save helper which enforces max model files
-        save_model_with_rotation(model=self.model, base_name='alexnet_bone_age_model')
+        try:
+            save_model_with_rotation(model=self.model, base_name='alexnet_bone_age_model')
+        except Exception as e:
+            self.logger.error("Error occurred while saving model: %s", e)
+
+        # compute and log validation metrics after training completes
+        try:
+            if len(val_label_files) > 0:
+                self.logger.info("Computing validation metrics on %d batch files", len(val_label_files))
+                # model.predict supports the generator that yields ((images, genders), labels)
+                preds = self.model.predict(val_generator)
+                # flatten and load true labels from the .npy batch files
+                labels_flat = np.concatenate([np.load(f).ravel() for f in val_label_files])
+                # ensure shapes align
+                preds_flat = preds.ravel()
+                metrics = compute_regression_metrics(labels_flat.astype(int), preds_flat)
+                for metric_name, metric_value in metrics.items():
+                    self.logger.info("%s: %.4f", metric_name, metric_value)
+            else:
+                self.logger.warning("No validation label files found; skipping metric computation.")
+        except Exception as e:
+            self.logger.exception("Failed to compute validation metrics: %s", e)
 
 
+# add this new callback class (place after imports or after BoneAgeDataGenerator)
+class TrainingLoggerCallback(tf.keras.callbacks.Callback):
+    """
+    Logs training progress using provided logger.
+    - Logs batch-level loss every `batch_log_freq` batches.
+    - Logs epoch-level metrics at the end of each epoch.
+    """
+    def __init__(self, logger, batch_log_freq=50):
+        super().__init__()
+        self.logger = logger
+        self.batch_log_freq = batch_log_freq
+
+    def on_train_batch_end(self, batch, logs=None):
+        logs = logs or {}
+        if (batch + 1) % self.batch_log_freq == 0:
+            loss = logs.get('loss')
+            self.logger.info("Batch %d: loss=%.4f", batch + 1, loss if loss is not None else float('nan'))
+
+    def on_epoch_end(self, epoch, logs=None):
+        logs = logs or {}
+        # log main metrics and validation metrics if present
+        loss = logs.get('loss')
+        val_loss = logs.get('val_loss')
+        metrics_summary = []
+        if loss is not None:
+            metrics_summary.append(f"loss={loss:.4f}")
+        if val_loss is not None:
+            metrics_summary.append(f"val_loss={val_loss:.4f}")
+        # include any other metrics (e.g., mae, val_mae)
+        for k, v in logs.items():
+            if k not in ('loss', 'val_loss'):
+                try:
+                    metrics_summary.append(f"{k}={v:.4f}")
+                except Exception:
+                    metrics_summary.append(f"{k}={v}")
+        self.logger.info("Epoch %d ended. %s", epoch + 1, ", ".join(metrics_summary))
 
 
 
