@@ -4,6 +4,8 @@ from utils.logger import get_logger
 from config.config import Config, DataConfig
 import argparse
 from validation import ValidationModel
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 parser = argparse.ArgumentParser(description="Bone Age Prediction")
 parser.add_argument("--preprocess",
@@ -14,12 +16,12 @@ parser.add_argument("--preprocess",
 
 parser.add_argument("--train",
                     choices=["True", "False"],
-                    default="False", 
+                    default="True", 
                     help="Enable training step")
 
 parser.add_argument("--validate",
                     choices=["True", "False"],
-                    default="True", 
+                    default="False", 
                     help="Enable validation step")
 
 
@@ -52,7 +54,7 @@ if __name__ == "__main__":
         logger.info("Training step is enabled.")
 
         model_trainer = BoneAgeModelTrainer()
-        model_trainer.model_Defination()
+        model_trainer.model_definition()
         model_trainer.train_model()
 
     if args.validate.lower() == "true" or args.run_pipeline.lower() == "true":
