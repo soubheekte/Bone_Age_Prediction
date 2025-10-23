@@ -10,6 +10,7 @@ class ValidationModel():
 
     def __init__(self):
         self.image_batch_files = sorted([os.path.join(DataConfig.valid_processed_images_dir, f) for f in os.listdir(DataConfig.valid_processed_images_dir) if f.endswith('.npy')])
+        self.gender_files = sorted([os.path.join(DataConfig.valid_processed_genders_dir, f) for f in os.listdir(DataConfig.valid_processed_genders_dir) if f.endswith('.npy')])
         self.label_batch_files = sorted([os.path.join(DataConfig.valid_processed_labels_dir, f) for f in os.listdir(DataConfig.valid_processed_labels_dir) if f.endswith('.npy')])
         # initialize custom logger
         self.logger = get_logger(__name__)
@@ -51,7 +52,7 @@ class ValidationModel():
             raise RuntimeError(f"Failed to load model from '{latest_model_path or model_save_dir}': {e}") from e
         
         # Predict on the validation data using the generator
-        val_generator = BoneAgeDataGenerator(self.image_batch_files, self.label_batch_files, batch_size=Config.BATCH_SIZE)
+        val_generator = BoneAgeDataGenerator(self.image_batch_files, self.gender_files, self.label_batch_files)
         predictions = loaded_model.predict(val_generator)
 
         labels_flat = np.concatenate([np.load(f).ravel() for f in self.label_batch_files])
