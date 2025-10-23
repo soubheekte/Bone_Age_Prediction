@@ -169,4 +169,4 @@ Note: Clinical deployment requires careful external validation, calibration, and
 
 ## License & Ethics
 - Ensure patient data is de-identified and you have rights to use the dataset.
--
+- Evaluate fairness across demographic groups before any clinical deployment.
