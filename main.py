@@ -10,13 +10,13 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 parser = argparse.ArgumentParser(description="Bone Age Prediction")
 parser.add_argument("--preprocess",
                     choices=["train", "validate", "both", "False"],
-                    default="False", 
+                    default="train", 
                     help="Enable preprocessing step")
 
 
 parser.add_argument("--train",
                     choices=["True", "False"],
-                    default="True", 
+                    default="False", 
                     help="Enable training step")
 
 parser.add_argument("--validate",

@@ -8,8 +8,8 @@ class Config:
     RANDOM_SEED: int = 42
     TEST_SIZE: float = 0.2
     IMAGE_SIZE: tuple = (256, 256)
-    BATCH_SIZE: int = 2
-    EPOCHS: int = 2
+    BATCH_SIZE: int = 128
+    EPOCHS: int = 50
     LEARNING_RATE: float = 0.001
     BASEDIR: str = r"."
 
@@ -28,3 +28,6 @@ class DataConfig:
     valid_processed_labels_dir: str = r"Data/valid_preprocessed_labels"
     valid_processed_ids_file: str = r"Data/valid_processed_image_ids.txt"
     valid_processed_genders_dir: str = r"Data/valid_preprocessed_genders"
+
+    model_checkpoints_dir: str = r"Models/checkpoints"
+    final_model_path: str = r"Models/final_bone_age_model.h5"

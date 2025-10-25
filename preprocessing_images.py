@@ -155,7 +155,6 @@ class BoneAgeDataPreprocessing():
                 f.write(f"{img_id}\n")
 
         print(f"Processed and saved batch {batch_id} with {len(batch_label)} images.")
-        print(f"Saved genders for batch {batch_id} to {self.processed_genders_dir}")
         print(f"Total images processed so far: {len(processed_ids)}")
         print(f"Images remaining to process: {len(unprocessed_label) - len(batch_label)}")
 

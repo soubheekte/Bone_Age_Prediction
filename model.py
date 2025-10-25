@@ -167,7 +167,7 @@ class BoneAgeModelTrainer():
                 train_generator,
                 epochs=Config.EPOCHS, # You can adjust the number of epochs
                 validation_data=val_generator,
-                callbacks=[early_stopping_callback, training_logger_cb] # Add training logger callback here
+                callbacks=[early_stopping_callback, training_logger_cb] # Add checkpoint callback here
             )
         except Exception as e:
             self.logger.error("Error occurred during model training: %s", e)
