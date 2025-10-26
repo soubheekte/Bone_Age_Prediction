@@ -63,13 +63,35 @@ class BoneAgeModelTrainer():
 
     def __init__(self):
 
+        # create a logger for the trainer early so we can log device detection
+        self.logger = get_logger(__name__)
+
+        # configure TF device behavior (enable memory growth when GPUs present)
+        try:
+            gpus = tf.config.list_physical_devices('GPU')
+            if gpus:
+                for gpu in gpus:
+                    try:
+                        tf.config.experimental.set_memory_growth(gpu, True)
+                    except Exception as e:
+                        # best-effort; continue if this fails
+                        self.logger.warning("Could not set memory growth for GPU %s: %s", gpu, e)
+                gpu_names = [g.name for g in gpus]
+                self.logger.info("GPUs detected and memory growth enabled: %s", gpu_names)
+            else:
+                self.logger.info("No GPU devices detected. Training will run on CPU.")
+        except Exception as e:
+            # if anything goes wrong during device detection, log and continue
+            self.logger.exception("Failed to detect/configure GPU devices: %s", e)
+
+        # load the preprocessed data file paths
         self.image_batch_files = sorted([os.path.join(DataConfig.train_processed_images_dir, f) for f in os.listdir(DataConfig.train_processed_images_dir) if f.endswith('.npy')])
         self.male_data_files = sorted([os.path.join(DataConfig.train_processed_genders_dir, f) for f in os.listdir(DataConfig.train_processed_genders_dir) if f.endswith('.npy')])
         self.label_batch_files = sorted([os.path.join(DataConfig.train_processed_labels_dir, f) for f in os.listdir(DataConfig.train_processed_labels_dir) if f.endswith('.npy')])
 
 
         # create a logger for the trainer
-        self.logger = get_logger(__name__)
+        
         self.logger.info("BoneAgeModelTrainer initialized.")
         self.logger.info("Found %d image batch files, %d gender files, %d label files",
                          len(self.image_batch_files), len(self.male_data_files), len(self.label_batch_files))
